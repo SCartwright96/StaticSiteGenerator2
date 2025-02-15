@@ -105,7 +105,52 @@ About A Wall of Test
 3. I hope this works""")
         self.assertEqual(block_to_blocktype(testStr), "paragraph")
 
-    
+    def test_markdown_heading_to_html3(self):
+        nodes = markdown_to_html_node("### Heading 3")
+        self.assertEqual(nodes, LeafNode("h3", "Heading 3"))
+
+    def test_markdown_heading_to_html2(self):
+        nodes = markdown_to_html_node("## Heading 2")
+        self.assertEqual(nodes, LeafNode("h2", "Heading 2"))
+
+    def test_markdown_heading_to_html7(self):
+        nodes = markdown_to_html_node("####### Heading 7")
+        self.assertEqual(nodes, LeafNode("p", "####### Heading 7"))
+
+    def test_markdown_code_to_html(self):
+        nodes = markdown_to_html_node("```This is some truly ```awful code``````")
+        self.assertEqual(nodes, ParentNode("pre",LeafNode("code", "This is some truly ```awful code```")))
+
+    def test_markdown_quote_to_html(self):
+        nodes = markdown_to_html_node(
+            """>This is a test
+>of the quote >SYSTEM<""")
+        self.assertEqual(nodes, LeafNode("blockquote", """This is a test
+>of the quote >SYSTEM<"""))
+        
+    def test_markdown_unordered_list_to_html(self):
+        nodes = markdown_to_html_node(
+"""* Egg
+- Egg 2
+* Egg 3"""
+        )
+        self.assertEqual(nodes, ParentNode("ul", [
+            LeafNode("li","Egg"),
+            LeafNode("li","Egg 2"),
+            LeafNode("li","Egg 3")
+        ]))
+
+    def test_markdown_ordered_list_to_html(self):
+        nodes = markdown_to_html_node(
+"""1. Egg
+2. Egg 2
+3. Egg 3"""
+        )
+        self.assertEqual(nodes, ParentNode("ol", [
+            LeafNode("li","Egg"),
+            LeafNode("li","Egg 2"),
+            LeafNode("li","Egg 3")
+        ]))
 
 if __name__ == "__main__":
     unittest.main()
