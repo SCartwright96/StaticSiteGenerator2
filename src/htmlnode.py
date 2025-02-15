@@ -43,7 +43,7 @@ class ParentNode(HTMLNode):
     def to_html(self):
         if self.tag == None:
             raise ValueError("Tag Not Assigned to Node")
-        if self.children == None:
+        if type(self.children) == None:
             raise ValueError ("Value Not Assigned to Node")
         child_html = ""
         for child in self.children:

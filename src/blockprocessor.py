@@ -1,5 +1,7 @@
 import re
 from htmlnode import *
+from inlineprocessor import *
+
 
 def markdown_to_block(markdown):
     blocks = markdown.split("\n\n")
@@ -37,42 +39,57 @@ def block_to_blocktype(block):
 def markdown_to_html_node(markdown):
     output_nodes = []
     blocks = markdown_to_block(markdown)
+    
     for block in blocks:
         block_type = block_to_blocktype(block)
         match block_type:
             case "heading":
                 head_num = len(re.findall(r"^(#{1,6}) ", block)[0])
                 new_text = re.findall(r"^#+ ([\s\S]*)", block)
-                output_nodes = LeafNode(f"h{head_num}", new_text[0])
+                output_nodes.append(ParentNode(f"h{head_num}", text_to_children(new_text[0])))
             case "code":
-                new_text = re.findall(r"^```([\s\S]*)```$", block)
-                output_nodes = ParentNode("pre",LeafNode("code", new_text[0]))
+                new_text = re.findall(r"^```\n([\s\S]*)\n```$", block)
+                print(new_text)
+                output_nodes.append(ParentNode("pre",[ParentNode("code", text_to_children(new_text[0]))]))
 
             case "quote":
-                text_list = re.findall(r"^>([\s\S]*)$", block, re.M)
+                text_list = re.findall(r"^> ([\s\S]*)$", block, re.M)
                 quote_string = ""
                 for text in text_list:
                     if len(quote_string)!=0:
                         quote_string += "\n"
                     quote_string += text
-                output_nodes = LeafNode("blockquote", quote_string)
+                output_nodes.append(ParentNode("blockquote", text_to_children(quote_string)))
 
             case "unordered_list":
                 uo_list = re.findall(r"^[-*] (.*?)$", block, re.M)
                 list_nodes = []
                 for item in uo_list:
-                    list_nodes.append(LeafNode("li", item))
+                    list_nodes.append(ParentNode("li", text_to_children(item)))
                 
-                output_nodes = ParentNode("ul", list_nodes)
+                output_nodes.append(ParentNode("ul",list_nodes))
 
             case "ordered_list":
                 o_list = re.findall(r"^\d+. (.*?)$", block, re.M)
                 list_nodes = []
                 for item in o_list:
-                    list_nodes.append(LeafNode("li", item))
+                    list_nodes.append(ParentNode("li", text_to_children(item)))
                 
-                output_nodes = ParentNode("ol", list_nodes)
+                output_nodes.append(ParentNode("ol", list_nodes))
 
             case _:
-                output_nodes = LeafNode("p", block)
+                output_nodes.append(ParentNode("p", text_to_children(block)))
     return output_nodes
+
+def text_to_children(text):
+    nodes = text_to_textnodes(text)
+    html = []
+    for node in nodes:
+        html.append(text_node_to_html_node(node))
+    return html
+
+def extract_title(markdown):
+    title = re.findall(r"^# (.*)$", markdown, re.M)
+    if title == []:
+        raise ValueError("The text has no markdown title")
+    return title[0]
